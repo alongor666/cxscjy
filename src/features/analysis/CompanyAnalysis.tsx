@@ -28,23 +28,23 @@ export function CompanyAnalysis({ filters }: CompanyAnalysisProps) {
 
         // 获取总保费
         const totalResult = await query<{ total: number }>(`
-          SELECT SUM("标准保费") as total
+          SELECT SUM("签单保费") as total
           FROM car_insurance
           ${whereClause}
         `)
         const total = totalResult[0]?.total ?? 0
 
-        // 获取公司数据
+        // 获取业务类型数据
         const result = await query<{
           company: string
           premium: number
         }>(`
           SELECT
-            "保险" as company,
-            SUM("标准保费") as premium
+            "业务类型" as company,
+            SUM("签单保费") as premium
           FROM car_insurance
           ${whereClause}
-          GROUP BY "保险"
+          GROUP BY "业务类型"
           ORDER BY premium DESC
           LIMIT 10
         `)
@@ -67,7 +67,7 @@ export function CompanyAnalysis({ filters }: CompanyAnalysisProps) {
 
   const option: EChartsOption = {
     title: {
-      text: '保险公司市场份额 TOP10',
+      text: '业务类型保费 TOP10',
       left: 'center',
       textStyle: {
         fontSize: 16,

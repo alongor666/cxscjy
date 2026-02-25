@@ -31,12 +31,12 @@ export function CityAnalysis({ filters }: CityAnalysisProps) {
           policies: number
         }>(`
           SELECT
-            "地市" as city,
-            SUM("标准保费") as premium,
-            SUM("标准件数") as policies
+            "城市" as city,
+            SUM("签单保费") as premium,
+            SUM("签单件数") as policies
           FROM car_insurance
           ${whereClause}
-          GROUP BY "地市"
+          GROUP BY "城市"
           ORDER BY premium DESC
         `)
         setData(result)

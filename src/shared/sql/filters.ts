@@ -13,7 +13,7 @@ export function buildWhereClause(filters: FilterState): string {
 
   if (filters.cities.length > 0) {
     const values = filters.cities.map(v => `'${escapeSQL(v)}'`).join(', ')
-    conditions.push(`"地市" IN (${values})`)
+    conditions.push(`"城市" IN (${values})`)
   }
 
   if (filters.insuranceTypes.length > 0) {
@@ -23,7 +23,7 @@ export function buildWhereClause(filters: FilterState): string {
 
   if (filters.companies.length > 0) {
     const values = filters.companies.map(v => `'${escapeSQL(v)}'`).join(', ')
-    conditions.push(`"保险" IN (${values})`)
+    conditions.push(`"业务类型" IN (${values})`)
   }
 
   if (conditions.length === 0) {

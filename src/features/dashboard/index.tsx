@@ -35,17 +35,31 @@ export interface RankingData {
 }
 
 export function Dashboard({ filters }: DashboardProps) {
-  const { query } = useDuckDB()
+  const { query, columns } = useDuckDB()
   const [activeTab, setActiveTab] = useState<TabType>('overview')
   const [kpiData, setKpiData] = useState<KPIData | null>(null)
   const [trendData, setTrendData] = useState<TrendData[]>([])
   const [cityRanking, setCityRanking] = useState<RankingData[]>([])
   const [companyRanking, setCompanyRanking] = useState<RankingData[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // 验证必需的列名
+  const requiredColumns = ['签单保费', '签单件数', '业务类型', '城市', '年月']
+  const missingColumns = requiredColumns.filter(col => !columns.includes(col))
 
   useEffect(() => {
     async function fetchData() {
       setLoading(true)
+      setError(null)
+
+      // 检查必需列名
+      if (missingColumns.length > 0) {
+        setError(`数据文件缺少必需列: ${missingColumns.join(', ')}。请确保上传的 Parquet 文件包含以下列: ${requiredColumns.join(', ')}`)
+        setLoading(false)
+        return
+      }
+
       try {
         const whereClause = buildWhereClause(filters)
 
@@ -57,10 +71,10 @@ export function Dashboard({ filters }: DashboardProps) {
           city_count: number
         }>(`
           SELECT
-            COALESCE(SUM("标准保费"), 0) as total_premium,
-            COALESCE(SUM("标准件数"), 0) as total_policies,
-            COUNT(DISTINCT "保险") as company_count,
-            COUNT(DISTINCT "地市") as city_count
+            COALESCE(SUM("签单保费"), 0) as total_premium,
+            COALESCE(SUM("签单件数"), 0) as total_policies,
+            COUNT(DISTINCT "业务类型") as company_count,
+            COUNT(DISTINCT "城市") as city_count
           FROM car_insurance
           ${whereClause}
         `)
@@ -80,8 +94,8 @@ export function Dashboard({ filters }: DashboardProps) {
         }>(`
           SELECT
             "年月" as year_month,
-            SUM("标准保费") as premium,
-            SUM("标准件数") as policies
+            SUM("签单保费") as premium,
+            SUM("签单件数") as policies
           FROM car_insurance
           ${whereClause}
           GROUP BY "年月"
@@ -103,12 +117,12 @@ export function Dashboard({ filters }: DashboardProps) {
           policies: number
         }>(`
           SELECT
-            "地市" as name,
-            SUM("标准保费") as premium,
-            SUM("标准件数") as policies
+            "城市" as name,
+            SUM("签单保费") as premium,
+            SUM("签单件数") as policies
           FROM car_insurance
           ${whereClause}
-          GROUP BY "地市"
+          GROUP BY "城市"
           ORDER BY premium DESC
           LIMIT 10
         `)
@@ -123,19 +137,19 @@ export function Dashboard({ filters }: DashboardProps) {
           }))
         )
 
-        // 公司排名
+        // 业务类型排名
         const companyResult = await query<{
           name: string
           premium: number
           policies: number
         }>(`
           SELECT
-            "保险" as name,
-            SUM("标准保费") as premium,
-            SUM("标准件数") as policies
+            "业务类型" as name,
+            SUM("签单保费") as premium,
+            SUM("签单件数") as policies
           FROM car_insurance
           ${whereClause}
-          GROUP BY "保险"
+          GROUP BY "业务类型"
           ORDER BY premium DESC
           LIMIT 10
         `)
@@ -150,6 +164,8 @@ export function Dashboard({ filters }: DashboardProps) {
           }))
         )
       } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : '获取数据失败'
+        setError(`查询错误: ${errorMessage}`)
         console.error('Failed to fetch dashboard data:', err)
       } finally {
         setLoading(false)
@@ -157,17 +173,22 @@ export function Dashboard({ filters }: DashboardProps) {
     }
 
     fetchData()
-  }, [query, filters])
+  }, [query, filters, columns, missingColumns])
 
   const tabs = [
     { id: 'overview' as const, label: '总览' },
     { id: 'city' as const, label: '地市分析' },
-    { id: 'company' as const, label: '公司分析' },
+    { id: 'company' as const, label: '业务类型分析' },
     { id: 'insurance' as const, label: '险种分析' },
   ]
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          <strong>数据错误：</strong> {error}
+        </div>
+      )}
       <KPICards data={kpiData} loading={loading} />
 
       {/* 标签页导航 */}
@@ -205,7 +226,7 @@ export function Dashboard({ filters }: DashboardProps) {
               loading={loading}
             />
             <RankingTable
-              title="公司保费 TOP10"
+              title="业务类型保费 TOP10"
               data={companyRanking}
               loading={loading}
             />
@@ -218,7 +239,7 @@ export function Dashboard({ filters }: DashboardProps) {
         <CityAnalysis filters={filters} />
       )}
 
-      {/* 公司分析视图 */}
+      {/* 业务类型分析视图 */}
       {activeTab === 'company' && (
         <CompanyAnalysis filters={filters} />
       )}

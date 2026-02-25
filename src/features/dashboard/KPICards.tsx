@@ -51,9 +51,9 @@ export function KPICards({ data, loading }: KPICardsProps) {
       />
 
       <KPICard
-        title="保险公司"
+        title="业务类型"
         value={data ? data.companyCount : '-'}
-        unit="家"
+        unit="类"
         loading={loading}
         icon={
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

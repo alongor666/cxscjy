@@ -32,8 +32,8 @@ export function InsuranceTypeAnalysis({ filters }: InsuranceTypeAnalysisProps) {
         }>(`
           SELECT
             "险种" as type,
-            SUM("标准保费") as premium,
-            SUM("标准件数") as policies
+            SUM("签单保费") as premium,
+            SUM("签单件数") as policies
           FROM car_insurance
           ${whereClause}
           GROUP BY "险种"
@@ -99,8 +99,8 @@ export function InsuranceTypeAnalysis({ filters }: InsuranceTypeAnalysisProps) {
         label: {
           show: true,
           position: 'right',
-          formatter: (params: { value: number }) =>
-            (params.value / 10000).toFixed(0) + '万',
+          formatter: (params: any) =>
+            (Number(params.value) / 10000).toFixed(0) + '万',
           fontSize: 11,
         },
       },

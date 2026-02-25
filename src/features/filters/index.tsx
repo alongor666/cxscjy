@@ -38,9 +38,9 @@ export function Filters({ value, onChange }: FiltersProps) {
       try {
         const [yearMonths, cities, insuranceTypes, companies] = await Promise.all([
           getDistinct('年月'),
-          getDistinct('地市'),
+          getDistinct('城市'),
           getDistinct('险种'),
-          getDistinct('保险'),
+          getDistinct('业务类型'),
         ])
 
         setOptions({
@@ -103,24 +103,24 @@ export function Filters({ value, onChange }: FiltersProps) {
         />
 
         <MultiSelect
-          label="保险公司"
+          label="业务类型"
           options={options.companies}
           value={value.companies}
           onChange={handleChange('companies')}
-          placeholder="全部公司"
+          placeholder="全部类型"
         />
 
         {(value.yearMonths.length > 0 ||
           value.cities.length > 0 ||
           value.insuranceTypes.length > 0 ||
           value.companies.length > 0) && (
-          <button
-            onClick={() => onChange(defaultFilterState)}
-            className="text-sm text-gray-500 hover:text-gray-700 underline"
-          >
-            清除筛选
-          </button>
-        )}
+            <button
+              onClick={() => onChange(defaultFilterState)}
+              className="text-sm text-gray-500 hover:text-gray-700 underline"
+            >
+              清除筛选
+            </button>
+          )}
       </div>
     </div>
   )
